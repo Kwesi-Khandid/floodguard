@@ -9,7 +9,8 @@ const pool = new Pool({
   port: process.env.DBPORT,
   user: process.env.DBUSER,
   password: process.DBPASSWORD,
-  database: process.env.DBNAME
+  database: process.env.DBNAME,
+   ssl: { rejectUnauthorized: false }
 });
 
 pool.on('error', (err) => {
