@@ -20,7 +20,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       // Points at your Express backend — swap for the deployed URL in production
-      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:4000/api',
+      apiBase: process.env.NUXT_PUBLIC_API_BASE,
       googleClientId: process.env.NUXT_PUBLIC_GOOGLE_CLIENT_ID
     }
   },
@@ -32,8 +32,12 @@ export default defineNuxtConfig({
   },
 
   vite: {
-    optimizeDeps: {
-      include: ['leaflet']
-    }
+  optimizeDeps: {
+    include: [
+      'leaflet',
+      '@vue/devtools-core',
+      '@vue/devtools-kit'
+    ]
   }
+}
 })
