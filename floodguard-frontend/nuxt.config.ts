@@ -20,7 +20,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       // Points at your Express backend — swap for the deployed URL in production
-      apiBase: process.env.NUXT_PUBLIC_API_BASE,
+      apiBase: process.env.NUXT_PUBLIC_API_BASE || "https://localhost:4000/api",
       googleClientId: process.env.NUXT_PUBLIC_GOOGLE_CLIENT_ID
     }
   },
