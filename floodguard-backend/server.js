@@ -27,5 +27,5 @@ app.use('/api/history', historyRoutes);
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT
 app.listen(PORT, () => console.log(`FloodGuard API running on port ${PORT}`));

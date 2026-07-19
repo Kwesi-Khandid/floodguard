@@ -5,11 +5,11 @@ const { Pool, types } = require('pg');
 types.setTypeParser(1700, (val) => parseFloat(val)); // 1700 = NUMERIC/DECIMAL OID
 
 const pool = new Pool({
-  host: 'localhost',
-  port: 5432,
-  user: 'postgres',
-  password: 'YOUR_DB_PASSWORD',
-  database: 'floodguard'
+  host: process.env.DBHOST,
+  port: process.env.DBPORT,
+  user: process.env.DBUSER,
+  password: process.DBPASSWORD,
+  database: process.env.DBNAME
 });
 
 pool.on('error', (err) => {
