@@ -6,13 +6,8 @@ let map = null
 const severityColor = { Minor: 'gold', Moderate: 'orange', Severe: 'red' }
 
 onMounted(async () => {
-   const L = await import('leaflet')
+  const L = await import('leaflet')
   map = L.map(mapEl.value).setView([5.6037, -0.1870], 11)
-
-  const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0
-  if (isTouchDevice) {
-    map.dragging.disable()
-  }
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap contributors'

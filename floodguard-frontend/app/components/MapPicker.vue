@@ -24,7 +24,7 @@ function zoomForWidth(width) {
 }
 
 onMounted(async () => {
-   L = await import('leaflet')
+  L = await import('leaflet')
 
   const initialZoom = zoomForWidth(window.innerWidth)
   map = L.map(mapEl.value, {
@@ -32,16 +32,11 @@ onMounted(async () => {
     tap: true
   }).setView([props.center.lat, props.center.lng], initialZoom)
 
-
-  const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0
-  if (isTouchDevice) {
-    map.dragging.disable()
-  }
-
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap contributors',
     maxZoom: 19
   }).addTo(map)
+
   const pinColor = props.mode === 'report' ? 'red' : 'blue'
   const icon = L.icon({
     iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${pinColor}.png`,
