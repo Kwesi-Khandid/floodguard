@@ -42,7 +42,11 @@ async function useMyLocation() {
         error.value = 'Could not get your location.'
       }
     },
-    { enableHighAccuracy: true, timeout: 10000 }
+    {
+    enableHighAccuracy: false,   // changed: faster network-based fix instead of waiting on GPS
+    timeout: 15000,               // changed: give it a bit more room, 10s was tight
+    maximumAge: 60000              // new: accept a cached position up to 60s old if available
+  }
   )
 }
 </script>
