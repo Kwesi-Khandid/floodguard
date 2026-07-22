@@ -5,6 +5,7 @@ const reports = ref([])
 const areas = ref([])
 const loading = ref(true)
 const error = ref('')
+const precision = ref(6) // 4 = regional, 6 = default, 8 = near-exact
 
 async function loadDashboard() {
   loading.value = true
@@ -12,7 +13,9 @@ async function loadDashboard() {
   try {
     const [reportsRes, statsRes] = await Promise.all([
       $fetch(`${config.public.apiBase}/reports`),
-      $fetch(`${config.public.apiBase}/reports/stats`)
+      $fetch(`${config.public.apiBase}/reports/stats`, {
+        query: { precision: precision.value }
+      })
     ])
     reports.value = reportsRes.reports
     areas.value = statsRes.areas
@@ -23,10 +26,14 @@ async function loadDashboard() {
   }
 }
 
-onMounted(loadDashboard)
 
 const totalReports = computed(() => reports.value.length)
 const severeAreas = computed(() => areas.value.filter(a => a.mostSevereRating === 'Severe').length)
+
+onMounted(loadDashboard)
+
+// re-fetch whenever the user moves the precision slider
+watch(precision, loadDashboard)
 </script>
 
 <template>
@@ -54,6 +61,16 @@ const severeAreas = computed(() => areas.value.filter(a => a.mostSevereRating ==
       </NuxtLink>
     </section>
 
+
+    
+      <!--precision control--> 
+
+      <div class="precision-control">
+    <label class="precision-label">
+      Area detail: {{ precision === 4 ? 'Regional' : precision === 8 ? 'Street-level' : 'City block' }}
+    </label>
+    <input type="range" min="4" max="8" step="1" v-model.number="precision" class="precision-slider" />
+  </div>
 
     <div v-if="loading" class="loading-box">
       <div class="spinner-border text-primary"></div>
@@ -614,7 +631,26 @@ const severeAreas = computed(() => areas.value.filter(a => a.mostSevereRating ==
 
 }
 
+}
 
+
+.precision-control {
+  max-width: 1100px;
+  margin: 0 auto 25px;
+}
+
+.precision-label {
+  display: block;
+  font-size: .85rem;
+  font-weight: 600;
+  color: #64748b;
+  margin-bottom: 8px;
+}
+
+.precision-slider {
+  width: 100%;
+  max-width: 320px;
+  accent-color: #2563eb;
 }
 
 
