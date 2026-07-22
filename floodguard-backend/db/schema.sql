@@ -53,19 +53,7 @@ CREATE TABLE IF NOT EXISTS gis_cache (
 );
 
 -- GDACS/ReliefWeb pre-loaded events + community-submitted reports, one table
-CREATE TABLE IF NOT EXISTS flood_events (
-    id              SERIAL PRIMARY KEY,
-    latitude        DECIMAL(9,6) NOT NULL,
-    longitude       DECIMAL(9,6) NOT NULL,
-    address_label   VARCHAR(255),
-    source          VARCHAR(20) NOT NULL, -- gdacs | reliefweb | community
-    reported_by     INTEGER REFERENCES users(id) ON DELETE SET NULL, -- community only
-    severity        VARCHAR(20), -- Minor | Moderate | Severe
-    event_date      DATE,
-    description     TEXT,
-    verified        BOOLEAN DEFAULT FALSE, -- admin can verify community reports
-    created_at      TIMESTAMP DEFAULT NOW()
-);
+
 
 CREATE INDEX IF NOT EXISTS idx_flood_events_location ON flood_events (latitude, longitude);
 CREATE INDEX IF NOT EXISTS idx_flood_events_source ON flood_events (source);
@@ -78,3 +66,25 @@ CREATE TABLE IF NOT EXISTS saved_locations (
     nickname        VARCHAR(100),
     created_at      TIMESTAMP DEFAULT NOW()
 );
+
+
+CREATE TABLE IF NOT EXISTS flood_events (
+    id              SERIAL PRIMARY KEY,
+    latitude        DECIMAL(9,6) NOT NULL,
+    longitude       DECIMAL(9,6) NOT NULL,
+    geom            geography(Point, 4326),
+    geohash         varchar(12),
+    address_label   VARCHAR(255),
+    source          VARCHAR(20) NOT NULL,
+    reported_by     INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    severity        VARCHAR(20),
+    event_date      DATE,
+    description     TEXT,
+    verified        BOOLEAN DEFAULT FALSE,
+    created_at      TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_flood_events_location ON flood_events (latitude, longitude);
+CREATE INDEX IF NOT EXISTS idx_flood_events_source ON flood_events (source);
+CREATE INDEX IF NOT EXISTS idx_flood_events_geom ON flood_events USING GIST (geom);
+CREATE INDEX IF NOT EXISTS idx_flood_events_geohash ON flood_events (geohash);

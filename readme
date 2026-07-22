@@ -1,0 +1,156 @@
+For **FloodGuard**, I would use **PostGIS as the spatial database** and **Geohash as the fast indexing and aggregation mechanism**. They work together rather than replacing each other.
+
+### 1. Report Submission
+
+When a user reports a flood, the system receives:
+
+* Latitude
+* Longitude
+* Flood severity
+* Description
+* Photos (optional)
+* Timestamp
+
+The backend then performs two operations:
+
+1. **Stores the exact location as a PostGIS geometry**
+
+   ```text
+   POINT(longitude latitude)
+   ```
+
+2. **Generates a Geohash** from the latitude and longitude.
+
+For example:
+
+```text
+Latitude: 5.603721
+Longitude: -0.187011
+
+↓
+
+Geohash: ec3f8w
+```
+
+Both the geometry and geohash are saved in the database alongside the report.
+
+---
+
+### 2. Storage
+
+Each report contains information similar to:
+
+```text
+Report ID
+Latitude
+Longitude
+Geometry (PostGIS POINT)
+Geohash
+Display Name
+Full Address
+Severity
+Description
+Created At
+```
+
+PostGIS stores the precise geographic location, while the geohash acts as a compact spatial identifier for efficient grouping and searching.
+
+---
+
+### 3. Aggregation
+
+Instead of grouping reports by address strings—which may vary in formatting—the system groups reports by their geohash.
+
+For example:
+
+```text
+ec3f8w → 125 reports
+
+ec3f8x → 73 reports
+
+ec3f8y → 18 reports
+```
+
+The dashboard can then display the number of reports for each geographic area without being affected by differences in address formatting.
+
+---
+
+### 4. Spatial Analysis
+
+When more advanced analysis is required, PostGIS is used.
+
+It enables operations such as:
+
+* Finding all reports within a specified distance of a location.
+* Identifying reports inside a municipality or district.
+* Measuring distance from rivers or drainage channels.
+* Determining whether a reported point falls inside a known floodplain.
+* Generating flood hotspots and clustered report locations.
+
+These spatial operations rely on the stored geometry rather than textual addresses.
+
+---
+
+### 5. Dashboard and Visualization
+
+The dashboard uses geohash-based aggregation to quickly identify the most frequently reported locations.
+
+The chart displays a simplified location name (e.g., **Kpeleve**) together with the number of reports, while the map displays the exact report locations using their PostGIS coordinates.
+
+Users can hover over or select an area to view additional information, including the complete address, report count, and flood severity.
+
+---
+
+### 6. Scalability
+
+As the number of reports grows into the hundreds of thousands or millions, geohash enables efficient aggregation by geographic region, avoiding expensive full-table scans. PostGIS provides optimized spatial indexing and querying for geographic analysis.
+
+This combination allows FloodGuard to remain responsive while supporting nationwide deployment and large volumes of community-generated flood reports.
+
+---
+
+### Overall Workflow
+
+```text
+User submits report
+        │
+        ▼
+Receive latitude & longitude
+        │
+        ├───────────────┐
+        ▼               ▼
+Create PostGIS      Generate Geohash
+Geometry (POINT)        │
+        │               │
+        └──────┬────────┘
+               ▼
+      Store in PostgreSQL
+               │
+      ┌────────┴─────────┐
+      ▼                  ▼
+ Dashboard          Spatial Analysis
+(Group by           (Distance, clustering,
+ Geohash)            floodplain checks,
+                     nearby reports)
+```
+
+This architecture combines the **precision of PostGIS** with the **speed of geohash-based aggregation**, making it suitable for a nationwide flood reporting platform.
+
+
+
+
+What I would do
+
+Since FloodGuard is intended for national deployment, I would never discard the exact coordinates.
+
+Instead:
+
+Save the exact latitude and longitude.
+Save the PostGIS geometry.
+Generate the full geohash.
+For dashboard aggregation, group by a shorter geohash prefix (for example, 6 or 7 characters, depending on the desired area size).
+
+This gives you flexibility:
+
+You can later change the aggregation size without losing data.
+Precise coordinates remain available for GIS analysis.

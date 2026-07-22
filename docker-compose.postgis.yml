@@ -1,0 +1,16 @@
+services:
+  floodguard-db:
+    image: postgis/postgis:15-3.4-alpine
+    container_name: floodguard-postgis
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_HOST_AUTH_METHOD: trust
+      POSTGRES_DB: floodguard
+    ports:
+      - "5434:5432"
+    volumes:
+      - floodguard_pg_data:/var/lib/postgresql/data
+
+volumes:
+  floodguard_pg_data:

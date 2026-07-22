@@ -10,7 +10,7 @@ const pool = new Pool({
   user: process.env.DBUSER,
   password: process.env.DBPASSWORD,
   database: process.env.DBNAME,
-   ssl: { rejectUnauthorized: false }
+
 });
 
 pool.on('error', (err) => {
