@@ -98,6 +98,107 @@
 
 
 // controllers/floodController.js
+// const pool = require('../db/pool');
+// const { getElevation } = require('../services/elevationService');
+// const { getSlope } = require('../services/slopeService');
+// const { getNearestWaterway } = require('../services/waterwayService');
+// const { getRainfall } = require('../services/rainfallService');
+// const { getSoil } = require('../services/soilService');
+// const { getLandCover } = require('../services/landCoverService');
+// const { getFloodHistory } = require('../services/floodHistoryService');
+// const { calculateRisk } = require('../services/riskEngine');
+// const { explainRisk } = require('../services/gptService');
+
+// async function checkFloodRisk(req, res) {
+//   try {
+//     const { latitude, longitude, addressLabel } = req.body;
+//     const lat = parseFloat(latitude);
+//     const lng = parseFloat(longitude);
+
+//     if (Number.isNaN(lat) || Number.isNaN(lng)) {
+//       return res.status(400).json({ error: 'Valid latitude and longitude are required' });
+//     }
+
+//     // Fetch elevation once, first — slope reuses this instead of fetching it again
+//     const elevation = await getElevation(lat, lng);
+
+//     const [waterway, rainfall, soilDrainage, landCover, floodHistory, slope] = await Promise.all([
+//       getNearestWaterway(lat, lng),
+//       getRainfall(lat, lng),
+//       getSoil(lat, lng),
+//       getLandCover(lat, lng),
+//       getFloodHistory(lat, lng),
+//       getSlope(lat, lng, elevation) // pass the already-fetched elevation in — no duplicate call
+//     ]);
+
+//     const factorData = {
+//       elevation,
+//       slope,
+//       riverDistance: waterway.distance,
+//       riverType: waterway.type,
+//       historicalFlood: floodHistory.historicalFlood,
+//       annualRainfall: rainfall,
+//       soilDrainage,
+//       landCover
+//     };
+
+//     const risk = calculateRisk(factorData);
+
+//     let analysis;
+//     try {
+//       analysis = await explainRisk(risk);
+//     } catch (err) {
+//       console.warn('GPT explanation unavailable, using fallback text:', err.message);
+//       analysis = {
+//         summary: `This site is classified as ${risk.level} risk (score ${risk.score}/100) based on: ${risk.reasons.join(', ')}.`,
+//         recommendation: 'Commission a site-specific engineering assessment before building.',
+//         buyerAdvice: 'Review local planning records and flood history before purchasing.'
+//       };
+//     }
+
+//     const userId = req.user?.id || null;
+
+//     const { rows } = await pool.query(
+//       `INSERT INTO risk_assessments
+//         (user_id, latitude, longitude, address_label, elevation, slope, river_distance, river_type,
+//          historical_flood, annual_rainfall, soil_drainage, land_cover, risk_score, risk_level,
+//          confidence, reasons, ai_summary, ai_recommendation, ai_buyer_advice)
+//        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)
+//        RETURNING id`,
+//       [
+//         userId, lat, lng, addressLabel || null, elevation, slope, factorData.riverDistance,
+//         factorData.riverType, factorData.historicalFlood, rainfall, soilDrainage, landCover,
+//         risk.score, risk.level, risk.confidence, JSON.stringify(risk.reasons),
+//         analysis.summary, analysis.recommendation, analysis.buyerAdvice
+//       ]
+//     );
+
+//     res.json({
+//       id: rows[0].id,
+//       coordinates: { latitude: lat, longitude: lng },
+//       risk: { level: risk.level, score: risk.score, confidence: risk.confidence },
+//       factors: factorData,
+//       analysis
+//     });
+//   } catch (err) {
+//     console.error('Flood risk check failed:', err);
+//     res.status(500).json({ error: 'Failed to assess flood risk. Please try again.' });
+//   }
+// }
+
+// async function getAssessmentById(req, res) {
+//   const { rows } = await pool.query('SELECT * FROM risk_assessments WHERE id = $1', [req.params.id]);
+//   if (!rows.length) return res.status(404).json({ error: 'Assessment not found' });
+//   res.json(rows[0]);
+// }
+
+// module.exports = { checkFloodRisk, getAssessmentById };
+
+
+
+// fix 3
+
+// controllers/floodController.js
 const pool = require('../db/pool');
 const { getElevation } = require('../services/elevationService');
 const { getSlope } = require('../services/slopeService');
@@ -119,8 +220,15 @@ async function checkFloodRisk(req, res) {
       return res.status(400).json({ error: 'Valid latitude and longitude are required' });
     }
 
-    // Fetch elevation once, first — slope reuses this instead of fetching it again
-    const elevation = await getElevation(lat, lng);
+    // Elevation is wrapped separately — if it fails, we degrade gracefully
+    // instead of failing the whole check.
+    let elevation;
+    try {
+      elevation = await getElevation(lat, lng);
+    } catch (err) {
+      console.warn('Elevation lookup failed, proceeding without it:', err.message);
+      elevation = null;
+    }
 
     const [waterway, rainfall, soilDrainage, landCover, floodHistory, slope] = await Promise.all([
       getNearestWaterway(lat, lng),
@@ -128,7 +236,7 @@ async function checkFloodRisk(req, res) {
       getSoil(lat, lng),
       getLandCover(lat, lng),
       getFloodHistory(lat, lng),
-      getSlope(lat, lng, elevation) // pass the already-fetched elevation in — no duplicate call
+      elevation !== null ? getSlope(lat, lng, elevation) : Promise.resolve(null)
     ]);
 
     const factorData = {
