@@ -30,7 +30,7 @@ async function getFloodHistory(lat, lng, radiusMeters = 500) {
   };
 }
 
-// module.exports = { getFloodHistory };
+ module.exports = { getFloodHistory };
 
 // // services/floodHistoryService.js
 // const pool = require('../db/pool');
