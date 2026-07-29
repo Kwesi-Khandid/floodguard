@@ -97,7 +97,7 @@
 // module.exports = { checkFloodRisk, getAssessmentById };
 
 
-controllers/floodController.js
+// controllers/floodController.js
 const pool = require('../db/pool');
 const { getElevation } = require('../services/elevationService');
 const { getSlope } = require('../services/slopeService');
