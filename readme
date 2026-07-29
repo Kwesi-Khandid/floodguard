@@ -154,3 +154,6 @@ This gives you flexibility:
 
 You can later change the aggregation size without losing data.
 Precise coordinates remain available for GIS analysis.
+
+
+docker compose -f docker-compose.postgis.yml up -d
